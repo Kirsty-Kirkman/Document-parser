@@ -22,12 +22,7 @@ examples/   # sample images to try the workflow on
 
 ```bash
 pixi install
-```
 
-### Usage Instructions
-
-```bash
-python src.image.FUNCTION exampes/IMAGE.png
-python src.text.FUNCTON examples/IMAGE.png
+# Run pipeline on examples
+pixi run python main.py
 ```
-where FUNCTION is the step that you want to run on the IMAGE
