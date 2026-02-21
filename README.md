@@ -3,12 +3,20 @@ Parser tool for well integrity data
 
 ### Code Structure
 
+```python
 src/
-    image/      contains sample code to process and structure the diagrams
-    text/       contains sample code to extract and parse the text / annotations
-
-examples/       sample images to try the workflow on
-
+│
+├── __init__.py
+├── image/   # contains code to process and structure diagrams
+│   ├── __init__.py
+│   ├── extract_shapes.py
+│   └── preprocess.py
+├── text/    # contains code to extract and parse text/annotations
+│   ├── __init__.py
+│   └── extract_text.py
+|
+examples/   # sample images to try the workflow on
+```
 
 ### Usage Instructions
 
