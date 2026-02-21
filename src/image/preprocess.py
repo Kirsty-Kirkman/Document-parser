@@ -86,7 +86,7 @@ def threshold_image(blur_image: np.ndarray) -> np.ndarray:
     # This makes contour detection easier
     _, thresh_image = cv2.threshold(
         src=blur_image,
-        thresh=150,
+        thresh=200,
         maxval=255,
         type=cv2.THRESH_BINARY_INV
     )
@@ -111,19 +111,68 @@ def close_gaps(thresh_image: np.ndarray) -> np.ndarray:
     )
     return closed_image
 
-def detect_edges(blur_image: np.ndarray) -> np.ndarray:
+def filter_primary_component(binary_image: np.ndarray,
+                             min_area_ratio: float = 0.01) -> np.ndarray:
+    """
+    Keep only the largest connected component.
+
+    This removes annotation boxes, leader lines, and text.
+
+    Args:
+        binary_image: closed binary image
+        min_area_ratio: minimum relative area threshold (safety filter)
+
+    Returns:
+        np.ndarray: filtered binary image
+    """
+
+    # Label all connected components
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+        binary_image,
+        connectivity=8
+    )
+
+    # stats format:
+    # stats[i] = [x, y, width, height, area]
+
+    image_area = binary_image.shape[0] * binary_image.shape[1]
+
+    # Ignore label 0 (background)
+    component_areas = stats[1:, cv2.CC_STAT_AREA]
+
+    if len(component_areas) == 0:
+        return binary_image
+
+    # Find largest component
+    largest_index = np.argmax(component_areas) + 1
+
+    largest_area = component_areas[np.argmax(component_areas)]
+
+    # Safety check to avoid keeping tiny noise
+    if largest_area < image_area * min_area_ratio:
+        return binary_image
+
+    # Create empty output image
+    filtered_image = np.zeros_like(binary_image)
+
+    # Keep only largest component
+    filtered_image[labels == largest_index] = 255
+
+    return filtered_image
+
+def detect_edges(binary_image: np.ndarray) -> np.ndarray:
     """
     Edge detection.
 
     Args:
-        blur_image (np.ndarray): thresholded binary image
+        binary_image (np.ndarray): thresholded binary image
 
     Returns:
         np.ndarray: edge-detected binary image
     """
     # Canny detects edges based on gradient change
     edges = cv2.Canny(
-        image=blur_image,
+        image=binary_image,
         threshold1=50,
         threshold2=150
     )
@@ -134,6 +183,7 @@ def save_intermediates(output_dir: str,
                        blur: np.ndarray,
                        thresh: np.ndarray,
                        closing: np.ndarray,
+                       filtered: np.ndarray,
                        edges: np.ndarray):
 
     os.makedirs(output_dir, exist_ok=True)
@@ -141,7 +191,8 @@ def save_intermediates(output_dir: str,
     cv2.imwrite(f"{output_dir}/gray.png", gray)
     cv2.imwrite(f"{output_dir}/blur.png", blur)
     cv2.imwrite(f"{output_dir}/threshold.png", thresh)
-    cv2.imwrite(f"{output_dir}/processed.png", closing)
+    cv2.imwrite(f"{output_dir}/closing.png", closing)
+    cv2.imwrite(f"{output_dir}/processed.png", filtered)
     cv2.imwrite(f"{output_dir}/edges.png", edges)
 
 def preprocess_image(image_path: str,
@@ -152,17 +203,19 @@ def preprocess_image(image_path: str,
     blur = remove_noise(gray)
     thresh = threshold_image(blur)
     closing = close_gaps(thresh)
-    edges = detect_edges(blur)
+    filtered = filter_primary_component(closing)
+    edges = detect_edges(filtered)
     save_intermediates(
         output_dir,
         gray,
         blur,
         thresh,
         closing,
+        filtered,
         edges
     )
 
     return {
-        "processed": closing,
+        "processed": filtered,
         "edges": edges
     }
