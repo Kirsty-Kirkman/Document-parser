@@ -1,4 +1,5 @@
-from .image import preprocess_image, extract_features
+import os
+from src import preprocess_image, extract_features
 
 def run_pipeline(image_path: str):
     print("Preprocessing image...")
@@ -12,5 +13,7 @@ def run_pipeline(image_path: str):
     print(features)
 
 if __name__ == "__main__":
-    image_path = "../examples/example.jpg"
-    run_pipeline(image_path)
+    imgs = os.listdir("examples")
+    for img in imgs:
+        image_path = os.path.join("examples", img)
+        run_pipeline(image_path)
