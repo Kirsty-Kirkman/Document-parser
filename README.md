@@ -20,6 +20,18 @@ examples/   # sample images to try the workflow on
 
 ### Start Here
 
+Install `pixi`
+
+For Windows
+```bash
+powershell -ExecutionPolicy Bypass -c "irm -useb https://pixi.sh/install.ps1 | iex"
+```
+
+For Mac
+```bash
+curl -fsSL https://pixi.sh/install.sh | sh
+```
+
 ```bash
 pixi install
 
