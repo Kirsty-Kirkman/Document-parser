@@ -1,5 +1,5 @@
 [workspace]
-authors = ["Arushi Sinha <115908316+arushisinha98@users.noreply.github.com>"]
+authors = ["Kirsty Kirkman <kirsty.kirman@hotmail.com>"]
 channels = ["conda-forge"]
 name = "Document-parser"
 platforms = ["osx-arm64"]
